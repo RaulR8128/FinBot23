@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Metiqueta para forzar al navegador a NO usar caché antigua -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Raúl | Analista v4</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React y Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- COMPONENTE DE ICONOS ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                camera: (
+                    <>
+                        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                        <circle cx="12" cy="13" r="3"/>
+                    </>
+                ),
+                upload: (
+                    <>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" x2="12" y1="3" y2="15"/>
+                    </>
+                ),
+                check: <polyline points="20 6 9 17 4 12"/>,
+                alert: (
+                    <>
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+                    </>
+                ),
+                trash: (
+                    <>
+                        <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+                    </>
+                ),
+                send: (
+                    <>
+                        <line x1="22" x2="11" y1="2" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </>
+                ),
+                settings: (
+                    <>
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </>
+                ),
+                loader: <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${className} ${name === 'loader' ? 'animate-spin' : ''}`}>
+                    {icons[name]}
+                </svg>
+            );
+        };
+
+        const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzjNR4yFwUO6FPmT29mh_3fDUm9fkazo_8OeeMs4VR66I78nJxb84PiK8hJTTGDZzyM/exec";
+        
+        // --- API KEY DE RAÚL (CONFIRMADA) ---
+        const RAUL_API_KEY = "AIzaSyBcYKumLsPQXC00SAQnb937OreQCvhjQoA";
+
+        const App = () => {
+            const [image, setImage] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [step, setStep] = useState('upload'); 
+            const [extractedData, setExtractedData] = useState(null);
+            const [error, setError] = useState(null);
+            const [registrationStatus, setRegistrationStatus] = useState(null);
+            
+            // Limpiar caché antigua por si acaso
+            useEffect(() => {
+                localStorage.removeItem('raul_api_version');
+            }, []);
+
+            // Ajustes técnicos configurables (solo el modelo)
+            const [modelId, setModelId] = useState(localStorage.getItem('raul_model_id') || "gemini-1.5-flash");
+            const [showSettings, setShowSettings] = useState(false);
+
+            const callGeminiWithRetry = async (base64Data, retries = 0) => {
+                const promptText = `ACTÚA COMO UN ANALISTA FINANCIERO PERSONAL DE PRECISIÓN.
+Analiza la boleta adjunta y extrae los datos siguiendo estas reglas estrictas:
+1. Extrae: Fecha (DD/MM/AAAA), Comercio, Monto Total, Moneda (Siempre CLP).
+2. Atomicidad: CADA producto o servicio debe ser una fila independiente. Prohibido agrupar ítems diferentes.
+3. Formato: Responde EXCLUSIVAMENTE con un objeto JSON válido con esta estructura:
+{
+  "fecha": "DD/MM/AAAA",
+  "comercio": "Nombre del Comercio",
+  "cuentaPrincipal": "Tarjeta/Efectivo/Pluxee",
+  "items": [{"descripcion": "Producto", "monto": 1000, "categoria": "Alimentación", "cuenta": "Sugerida"}]
+}
+NO incluyas explicaciones adicionales, solo el JSON puro.`;
+
+                try {
+                    // SE ELIMINA LA VARIABLE API VERSION, SE FORZA V1BETA ABSOLUTAMENTE
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${RAUL_API_KEY}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: promptText },
+                                    { inlineData: { mimeType: "image/png", data: base64Data.split(',')[1] } }
+                                ]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`[${response.status}] ${errorData.error?.message || "Error en el servidor de Google"}`);
+                    }
+
+                    const data = await response.json();
+                    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("La IA no devolvió resultados.");
+                    
+                    const responseText = data.candidates[0].content.parts[0].text;
+                    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch) throw new Error("Formato de datos inválido.");
+                    
+                    return JSON.parse(jsonMatch[0]);
+                } catch (err) {
+                    if (retries < 2 && (err.message.includes('429') || err.message.includes('500'))) {
+                        await new Promise(res => setTimeout(res, 2000));
+                        return callGeminiWithRetry(base64Data, retries + 1);
+                    }
+                    throw err;
+                }
+            };
+
+            const processImage = async (base64Data) => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const parsedData = await callGeminiWithRetry(base64Data);
+                    setExtractedData(parsedData);
+                    setStep('confirm');
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleRegister = async () => {
+                setIsSubmitting(true);
+                try {
+                    const rows = extractedData.items.map(item => [
+                        extractedData.fecha, "Gasto", item.categoria, item.cuenta, item.descripcion, item.monto, "CLP", `Comercio: ${extractedData.comercio}`
+                    ].join(';'));
+                    const dataString = rows.join('|');
+                    const finalUrl = `${WEBHOOK_URL}?data=${encodeURIComponent(dataString)}`;
+                    await fetch(finalUrl, { method: 'GET', mode: 'no-cors' });
+                    setRegistrationStatus('success');
+                    setStep('result');
+                } catch (err) {
+                    setRegistrationStatus('error');
+                    setStep('result');
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            const handleFileChange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => { setImage(e.target.result); processImage(e.target.result); };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            return (
+                <div className="min-h-screen p-4 flex items-center justify-center bg-slate-100">
+                    <div className="max-w-4xl w-full">
+                        <header className="mb-6 flex justify-between items-center px-4">
+                            <h1 className="text-2xl font-black text-indigo-900 tracking-tighter uppercase italic text-center md:text-left">Raúl <span className="text-indigo-500 font-light underline">Finanzas 4.0</span></h1>
+                            <button onClick={() => setShowSettings(!showSettings)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 active:scale-95 transition-all"><Icon name="settings" size={24} /></button>
+                        </header>
+
+                        {showSettings && (
+                            <div className="mb-6 bg-white p-6 rounded-[2rem] border shadow-2xl animate-in slide-in-from-top duration-300">
+                                <h3 className="text-xs font-black text-indigo-900 uppercase mb-4 tracking-[0.2em] text-center">Ajustes de Conexión</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">Modelo de Inteligencia Artificial</label>
+                                        <select value={modelId} onChange={(e) => {setModelId(e.target.value); localStorage.setItem('raul_model_id', e.target.value);}} className="w-full bg-slate-50 border-none rounded-xl p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 appearance-none">
+                                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Más Rápido)</option>
+                                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Más Preciso)</option>
+                                        </select>
+                                    </div>
+                                    <button onClick={() => setShowSettings(false)} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 shadow-lg">Cerrar Ajustes</button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden min-h-[450px]">
+                            {step === 'upload' && (
+                                <div className="p-12 text-center">
+                                    {!loading ? (
+                                        <div className="flex flex-col items-center">
+                                            <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-[2.2rem] flex items-center justify-center mb-8 shadow-2xl rotate-3">
+                                                <Icon name="camera" size={42} />
+                                            </div>
+                                            <h2 className="text-2xl font-black mb-2 text-slate-800 tracking-tight">Procesar Boleta</h2>
+                                            <p className="text-emerald-600 text-[11px] mb-10 uppercase font-black tracking-widest bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-200">
+                                                VERSIÓN 4.0: CONEXIÓN V1BETA BLINDADA
+                                            </p>
+                                            <label className="cursor-pointer bg-slate-900 text-white px-12 py-5 rounded-2xl font-black flex items-center gap-3 active:scale-95 shadow-xl hover:bg-black transition-all tracking-widest text-[11px]">
+                                                <Icon name="upload" /> SUBIR PARA REGISTRAR
+                                                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                                            </label>
+                                            {error && (
+                                                <div className="mt-8 text-red-600 text-[10px] font-black bg-red-50 p-6 rounded-[2rem] border border-red-100 uppercase tracking-widest text-left max-w-sm mx-auto shadow-sm">
+                                                    <span className="text-red-800 block mb-2 underline tracking-normal font-black italic">⚠️ Error de Red:</span>
+                                                    {error}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-24">
+                                            <Icon name="loader" size={68} className="text-indigo-600 mb-8 animate-spin" />
+                                            <h2 className="text-xl font-bold tracking-tight text-slate-800 uppercase italic">Procesando para Raúl</h2>
+                                            <p className="text-[10px] text-slate-400 mt-3 font-black tracking-[0.4em] uppercase animate-pulse">Desglosando ítems...</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {step === 'confirm' && (
+                                <div className="flex flex-col md:flex-row h-auto md:min-h-[600px]">
+                                    <div className="w-full md:w-2/5 bg-slate-100 border-r relative min-h-[350px]">
+                                        <img src={image} className="w-full h-full object-contain p-4 shadow-inner" />
+                                        <button onClick={() => setStep('upload')} className="absolute bottom-4 left-4 bg-white/95 px-6 py-3 text-[10px] font-black text-red-500 rounded-[1.2rem] shadow-2xl border border-red-50 uppercase tracking-widest active:scale-90 transition-all">DESCARTAR</button>
+                                    </div>
+                                    <div className="w-full md:w-3/5 flex flex-col bg-slate-50/40">
+                                        <div className="p-6 bg-indigo-900 text-white grid grid-cols-2 gap-4 shadow-2xl z-10">
+                                            <div>
+                                                <label className="text-[9px] font-black text-indigo-300 uppercase block px-1 mb-1 tracking-widest">Comercio</label>
+                                                <input value={extractedData.comercio} onChange={e => setExtractedData({...extractedData, comercio: e.target.value})} className="bg-indigo-800 w-full rounded-xl p-3 text-xs font-bold border-none outline-none focus:ring-2 focus:ring-indigo-400" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-black text-indigo-300 uppercase block px-1 mb-1 tracking-widest">Fecha</label>
+                                                <input value={extractedData.fecha} onChange={e => setExtractedData({...extractedData, fecha: e.target.value})} className="bg-indigo-800 w-full rounded-xl p-3 text-xs font-mono border-none outline-none focus:ring-2 focus:ring-indigo-400" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scroll">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 text-center italic border-b border-slate-200 pb-2 mx-10">Atomicidad Confirmada</p>
+                                            {extractedData.items.map((item, idx) => (
+                                                <div key={idx} className="bg-white p-5 rounded-[1.8rem] border border-slate-200 shadow-sm hover:border-indigo-400 transition-all hover:shadow-xl group">
+                                                    <div className="flex justify-between items-start gap-4 mb-3">
+                                                        <textarea rows="1" className="flex-1 font-bold text-[13px] bg-transparent border-none p-0 focus:ring-0 resize-none text-slate-800 outline-none" value={item.descripcion} onChange={e => {
+                                                            const newItems = [...extractedData.items];
+                                                            newItems[idx].descripcion = e.target.value;
+                                                            setExtractedData({...extractedData, items: newItems});
+                                                        }} />
+                                                        <div className="font-mono font-black text-indigo-700 text-lg">$<input type="number" className="w-20 bg-transparent text-right border-none p-0 focus:ring-0 outline-none" value={item.monto} onChange={e => {
+                                                            const newItems = [...extractedData.items];
+                                                            newItems[idx].monto = parseInt(e.target.value) || 0;
+                                                            setExtractedData({...extractedData, items: newItems});
+                                                        }} /></div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <input className="text-[9px] bg-slate-100 px-3 py-1.5 rounded-xl font-black text-slate-500 border-none uppercase tracking-tighter outline-none" value={item.categoria} onChange={e => {
+                                                            const newItems = [...extractedData.items];
+                                                            newItems[idx].categoria = e.target.value;
+                                                            setExtractedData({...extractedData, items: newItems});
+                                                        }} />
+                                                        <input className="text-[9px] bg-indigo-50 px-3 py-1.5 rounded-xl font-black text-indigo-600 border-none uppercase tracking-tighter outline-none" value={item.cuenta} onChange={e => {
+                                                            const newItems = [...extractedData.items];
+                                                            newItems[idx].cuenta = e.target.value;
+                                                            setExtractedData({...extractedData, items: newItems});
+                                                        }} />
+                                                        <button onClick={() => setExtractedData({...extractedData, items: extractedData.items.filter((_, i) => i !== idx)})} className="ml-auto text-slate-200 hover:text-red-500 transition-colors"><Icon name="trash" size={20}/></button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="p-8 bg-white border-t flex justify-between items-center shadow-2xl relative z-20">
+                                            <div className="text-3xl font-black text-slate-900 tracking-tighter leading-none">${extractedData.items.reduce((acc, item) => acc + item.monto, 0).toLocaleString()}</div>
+                                            <button onClick={handleRegister} disabled={isSubmitting} className="bg-indigo-600 text-white px-10 py-5 rounded-[1.5rem] font-black flex items-center gap-3 shadow-2xl shadow-indigo-100 active:scale-95 hover:bg-indigo-700 transition-all uppercase tracking-widest text-[11px]">
+                                                {isSubmitting ? <Icon name="loader" /> : <><Icon name="send" /> REGISTRAR AHORA</>}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 'result' && (
+                                <div className="p-16 text-center animate-in zoom-in duration-500">
+                                    <div className={`w-32 h-32 mx-auto rounded-[2.8rem] flex items-center justify-center mb-10 shadow-inner ${registrationStatus === 'success' ? 'bg-green-100 text-green-600 shadow-green-100' : 'bg-amber-100 text-amber-600 shadow-amber-100'}`}>
+                                        <Icon name={registrationStatus === 'success' ? 'check' : 'alert'} size={64} />
+                                    </div>
+                                    <h2 className="text-3xl font-black mb-14 tracking-tighter text-slate-800 uppercase italic">
+                                        {registrationStatus === 'success' ? "¡Registro Guardado!" : "Error en el Script"}
+                                    </h2>
+                                    <button onClick={() => setStep('upload')} className="bg-indigo-600 text-white px-16 py-6 rounded-[2.2rem] font-black tracking-widest shadow-2xl active:scale-95 transition-all uppercase text-[11px] hover:bg-indigo-700">SIGUIENTE GASTO</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
