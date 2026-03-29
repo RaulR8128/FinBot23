@@ -178,8 +178,9 @@
                 if (!localApiKey) throw new Error("Falta la API Key de Google.");
                 const todayStr = new Date().toLocaleDateString('es-CL');
                 
-                const promptText = `Cuentas: CMR,Falabella,Efectivo. Cats: Comida,Comida Extra,Transporte,Hogar,Cuidado personal,Salud,Tokio,Servicios,Tecnología,Salida. Ingreso(monto positivo), Egreso(monto negativo). Transferencia=2 items(1 salida, 1 entrada). 1 producto=1 fila. Fecha por defecto: ${todayStr}. Comentario=Contexto o comercio.`;
-
+                //const promptText = `Cuentas: CMR,Falabella,Efectivo. Cats: Comida,Comida Extra,Transporte,Hogar,Cuidado personal,Salud,Tokio,Servicios,Tecnología,Salida. Ingreso(monto positivo), Egreso(monto negativo). Transferencia=2 items(1 salida, 1 entrada). 1 producto=1 fila. Fecha por defecto: ${todayStr}. Comentario=Contexto o comercio.`;
+                const promptText = `Cuentas: CMR,Falabella,Efectivo. Cats: Comida(despensa/base), Comida Extra(snacks/galletas/dulces), Transporte,Hogar,Cuidado personal,Salud,Tokio(mascota),Servicios,Tecnología,Salida. Ingreso(monto positivo), Egreso(monto negativo). Transferencia=2 items(1 salida, 1 entrada). 1 producto=1 fila. Fecha por defecto: ${todayStr}. Comentario=Contexto o comercio.`;
+                
                 let parts = [{ text: promptText }];
                 if (type === 'text') parts.push({ text: `Datos: "${inputData}"` });
                 else if (type === 'image' || type === 'audio') {
