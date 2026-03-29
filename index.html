@@ -16,7 +16,7 @@
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 6px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .animate-pulse-slow { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
@@ -78,7 +78,6 @@
             const [localApiKey, setLocalApiKey] = useState(localStorage.getItem('raul_gemini_key') || "");
             const [webhookUrl, setWebhookUrl] = useState(localStorage.getItem('raul_webhook_url') || "");
             
-            // NUEVO: Modelo por defecto apunta al estable más reciente en lugar del "1.5"
             const [modelId, setModelId] = useState(() => {
                 return localStorage.getItem('raul_model_id') || "gemini-flash-latest";
             });
@@ -179,7 +178,6 @@
                 if (!localApiKey) throw new Error("Falta la API Key de Google.");
                 const todayStr = new Date().toLocaleDateString('es-CL');
                 
-                // INSTRUCCIONES ULTRA-REDUCIDAS (Menos de 40 tokens)
                 const promptText = `Cuentas: CMR,Falabella,Efectivo. Cats: Comida,Comida Extra,Transporte,Hogar,Cuidado personal,Salud,Tokio,Servicios,Tecnología,Salida. Ingreso(monto positivo), Egreso(monto negativo). Transferencia=2 items(1 salida, 1 entrada). 1 producto=1 fila. Fecha por defecto: ${todayStr}. Comentario=Contexto o comercio.`;
 
                 let parts = [{ text: promptText }];
@@ -195,7 +193,6 @@
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             contents: [{ parts }],
-                            // Aquí se inyecta el esquema forzando el formato exacto del JSON
                             generationConfig: {
                                 responseMimeType: "application/json",
                                 responseSchema: jsonSchema
@@ -386,71 +383,71 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                 <h1 className="text-2xl font-black text-indigo-900 tracking-tighter uppercase italic">
                                     App <span className="text-indigo-500 font-light underline">Finanzas AI</span>
                                 </h1>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v7.2 (Modelos Dinámicos)</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v7.3</p>
                             </div>
-                            <button onClick={() => setShowSettings(!showSettings)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 active:scale-95 transition-all relative">
+                            <button onClick={() => setShowSettings(!showSettings)} className="p-3 bg-white rounded-md shadow-sm text-slate-400 active:scale-95 transition-all relative">
                                 {!isConfigured && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>}
                                 <Icon name="settings" size={24} />
                             </button>
                         </header>
 
                         {showSettings && (
-                            <div className="mb-6 bg-white p-6 rounded-[2rem] border shadow-2xl animate-in slide-in-from-top duration-300">
+                            <div className="mb-6 bg-white p-6 rounded-lg border shadow-2xl animate-in slide-in-from-top duration-300">
                                 <h3 className="text-xs font-black text-indigo-900 uppercase mb-4 tracking-[0.2em] text-center">Configuración Personal</h3>
                                 <div className="space-y-5">
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase block mb-1">1. Clave Privada API (Google Gemini)</label>
-                                        <input type="password" value={localApiKey} onChange={(e) => { setLocalApiKey(e.target.value); localStorage.setItem('raul_gemini_key', e.target.value); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-1" placeholder="AIzaSy..." />
+                                        <input type="password" value={localApiKey} onChange={(e) => { setLocalApiKey(e.target.value); localStorage.setItem('raul_gemini_key', e.target.value); }} className="w-full bg-slate-50 border border-slate-200 rounded-md p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-1" placeholder="AIzaSy..." />
                                         <p className="text-[9px] text-emerald-600 font-bold italic">🔒 Se guarda en tu teléfono.</p>
                                     </div>
                                     <div className="pt-3 border-t border-slate-100">
                                         <label className="text-[10px] font-black text-slate-400 uppercase block mb-1 flex items-center gap-1"><Icon name="sheet" size={12}/> 2. Webhook de Google Sheets</label>
-                                        <input type="url" value={webhookUrl} onChange={(e) => { setWebhookUrl(e.target.value); localStorage.setItem('raul_webhook_url', e.target.value); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-1" placeholder="https://script.google.com/macros/s/.../exec" />
+                                        <input type="url" value={webhookUrl} onChange={(e) => { setWebhookUrl(e.target.value); localStorage.setItem('raul_webhook_url', e.target.value); }} className="w-full bg-slate-50 border border-slate-200 rounded-md p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none mb-1" placeholder="https://script.google.com/macros/s/.../exec" />
                                     </div>
                                     <div className="pt-3 border-t border-slate-100">
                                         <label className="text-[10px] font-black text-slate-400 uppercase block mb-2">3. Configurar Modelo de IA</label>
                                         <div className="flex gap-2">
-                                            <select value={modelId} onChange={(e) => {setModelId(e.target.value); localStorage.setItem('raul_model_id', e.target.value);}} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                                            <select value={modelId} onChange={(e) => {setModelId(e.target.value); localStorage.setItem('raul_model_id', e.target.value);}} className="flex-1 bg-slate-50 border border-slate-200 rounded-md p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
                                                 {availableModels.length > 0 ? availableModels.map(m => <option key={m} value={m}>{m.toUpperCase()}</option>) : (
                                                     <><option value="gemini-flash-latest">GEMINI-FLASH-LATEST</option><option value="gemini-2.5-flash">GEMINI-2.5-FLASH</option></>
                                                 )}
                                             </select>
-                                            <button onClick={fetchModels} disabled={fetchingModels || !localApiKey} className={`px-4 ${!localApiKey ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'} border border-indigo-100 rounded-xl text-xs font-bold active:scale-95 transition-all`}>
+                                            <button onClick={fetchModels} disabled={fetchingModels || !localApiKey} className={`px-4 ${!localApiKey ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'} border border-indigo-100 rounded-md text-xs font-bold active:scale-95 transition-all`}>
                                                 {fetchingModels ? <Icon name="loader" size={16}/> : <Icon name="search" size={16}/>}
                                             </button>
                                         </div>
                                     </div>
-                                    <button onClick={() => setShowSettings(false)} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 shadow-lg mt-4 transition-all">Guardar Ajustes</button>
+                                    <button onClick={() => setShowSettings(false)} className="w-full bg-slate-900 text-white font-black py-4 rounded-md text-[10px] uppercase tracking-widest active:scale-95 shadow-lg mt-4 transition-all">Guardar Ajustes</button>
                                 </div>
                             </div>
                         )}
 
-                        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden min-h-[450px]">
+                        <div className="bg-white rounded-lg shadow-2xl border border-slate-200 overflow-hidden min-h-[450px]">
                             {step === 'upload' && (
                                 <div className="p-8 md:p-12 text-center">
                                     {!loading ? (
                                         <div className="flex flex-col items-center">
                                             <h2 className="text-2xl font-black mb-6 text-slate-800 tracking-tight">Ingresar Gasto</h2>
                                             {!isConfigured ? (
-                                                <div className="mt-2 mb-8 bg-red-50 p-4 rounded-2xl border border-red-100 w-full max-w-sm">
+                                                <div className="mt-2 mb-8 bg-red-50 p-4 rounded-md border border-red-100 w-full max-w-sm">
                                                     <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">⚠️ Configuración Pendiente</p>
-                                                    <button onClick={() => setShowSettings(true)} className="bg-white text-red-600 border border-red-200 w-full py-3 rounded-xl text-xs font-bold active:scale-95 shadow-sm transition-all">Abrir Ajustes ⚙️</button>
+                                                    <button onClick={() => setShowSettings(true)} className="bg-white text-red-600 border border-red-200 w-full py-3 rounded-md text-xs font-bold active:scale-95 shadow-sm transition-all">Abrir Ajustes ⚙️</button>
                                                 </div>
                                             ) : (
                                                 <div className="w-full max-w-sm">
-                                                    <div className="flex justify-center bg-slate-100 p-1.5 rounded-2xl mb-8 border border-slate-200 shadow-inner">
-                                                        <button onClick={() => setInputMode('photo')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 uppercase tracking-widest ${inputMode === 'photo' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="camera" size={14}/> Foto</button>
-                                                        <button onClick={() => setInputMode('audio')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 uppercase tracking-widest ${inputMode === 'audio' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="mic" size={14}/> Audio</button>
-                                                        <button onClick={() => setInputMode('text')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 uppercase tracking-widest ${inputMode === 'text' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="type" size={14}/> Texto</button>
+                                                    <div className="flex justify-center bg-slate-100 p-1.5 rounded-md mb-8 border border-slate-200 shadow-inner">
+                                                        <button onClick={() => setInputMode('photo')} className={`flex-1 py-2.5 rounded-md text-[10px] font-black transition-all flex justify-center items-center gap-2 uppercase tracking-widest ${inputMode === 'photo' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="camera" size={14}/> Foto</button>
+                                                        <button onClick={() => setInputMode('audio')} className={`flex-1 py-2.5 rounded-md text-[10px] font-black transition-all flex justify-center items-center gap-2 uppercase tracking-widest ${inputMode === 'audio' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="mic" size={14}/> Audio</button>
+                                                        <button onClick={() => setInputMode('text')} className={`flex-1 py-2.5 rounded-md text-[10px] font-black transition-all flex justify-center items-center gap-2 uppercase tracking-widest ${inputMode === 'text' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}><Icon name="type" size={14}/> Texto</button>
                                                     </div>
 
                                                     {inputMode === 'photo' && (
                                                         <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-                                                            <label className="cursor-pointer bg-slate-900 text-white w-full py-5 rounded-[1.5rem] font-black flex justify-center items-center gap-3 active:scale-95 shadow-xl hover:bg-black transition-all tracking-widest text-[11px]">
+                                                            <label className="cursor-pointer bg-slate-900 text-white w-full py-5 rounded-md font-black flex justify-center items-center gap-3 active:scale-95 shadow-xl hover:bg-black transition-all tracking-widest text-[11px]">
                                                                 <Icon name="camera" size={18}/> ABRIR CÁMARA
                                                                 <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
                                                             </label>
-                                                            <label className="cursor-pointer bg-white border border-slate-200 text-slate-700 w-full py-4 rounded-[1.5rem] font-black flex justify-center items-center gap-3 active:scale-95 shadow-sm hover:bg-slate-50 transition-all tracking-widest text-[10px]">
+                                                            <label className="cursor-pointer bg-white border border-slate-200 text-slate-700 w-full py-4 rounded-md font-black flex justify-center items-center gap-3 active:scale-95 shadow-sm hover:bg-slate-50 transition-all tracking-widest text-[10px]">
                                                                 <Icon name="image" size={16}/> DESDE GALERÍA
                                                                 <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                                                             </label>
@@ -460,9 +457,9 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                                     {inputMode === 'audio' && (
                                                         <div className="flex flex-col items-center py-6 animate-in fade-in duration-300">
                                                             {!isRecording ? (
-                                                                <button onClick={() => handleStartRecording(false)} className="bg-red-500 text-white w-28 h-28 rounded-full flex justify-center items-center shadow-xl shadow-red-200 active:scale-90 transition-all hover:bg-red-600 animate-pulse-slow"><Icon name="mic" size={48} /></button>
+                                                                <button onClick={() => handleStartRecording(false)} className="bg-red-500 text-white w-28 h-28 rounded-xl flex justify-center items-center shadow-xl shadow-red-200 active:scale-90 transition-all hover:bg-red-600 animate-pulse-slow"><Icon name="mic" size={48} /></button>
                                                             ) : (
-                                                                <button onClick={() => handleStopRecording(false)} className="bg-slate-900 text-white w-28 h-28 rounded-full flex justify-center items-center shadow-xl shadow-slate-300 active:scale-90 transition-all animate-pulse"><Icon name="stop" size={48} /></button>
+                                                                <button onClick={() => handleStopRecording(false)} className="bg-slate-900 text-white w-28 h-28 rounded-xl flex justify-center items-center shadow-xl shadow-slate-300 active:scale-90 transition-all animate-pulse"><Icon name="stop" size={48} /></button>
                                                             )}
                                                             <p className="text-[10px] font-black text-slate-400 mt-8 uppercase tracking-[0.2em] text-center">{isRecording ? "Grabando... Toca para procesar" : "Toca para dictar"}</p>
                                                         </div>
@@ -470,13 +467,13 @@ JSON actual: ${JSON.stringify(extractedData)}`;
 
                                                     {inputMode === 'text' && (
                                                         <div className="flex flex-col gap-4 animate-in fade-in duration-300">
-                                                            <textarea value={textInput} onChange={(e) => setTextInput(e.target.value)} placeholder="Ej: Pagué la consulta del doctor con CMR, fueron 15000..." className="w-full bg-slate-50 border border-slate-200 rounded-3xl p-5 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-36" />
-                                                            <button onClick={() => {if(textInput.trim()) processInput(textInput, 'text');}} disabled={!textInput.trim()} className="w-full bg-indigo-600 text-white py-5 rounded-[1.5rem] font-black disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 shadow-xl transition-all text-[11px] uppercase tracking-widest flex justify-center items-center gap-2"><Icon name="type" size={16}/> PROCESAR TEXTO</button>
+                                                            <textarea value={textInput} onChange={(e) => setTextInput(e.target.value)} placeholder="Ej: Pagué la consulta del doctor con CMR, fueron 15000..." className="w-full bg-slate-50 border border-slate-200 rounded-md p-5 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-36" />
+                                                            <button onClick={() => {if(textInput.trim()) processInput(textInput, 'text');}} disabled={!textInput.trim()} className="w-full bg-indigo-600 text-white py-5 rounded-md font-black disabled:bg-slate-200 disabled:text-slate-400 active:scale-95 shadow-xl transition-all text-[11px] uppercase tracking-widest flex justify-center items-center gap-2"><Icon name="type" size={16}/> PROCESAR TEXTO</button>
                                                         </div>
                                                     )}
                                                 </div>
                                             )}
-                                            {error && <div className="mt-8 text-red-600 text-[10px] font-black bg-red-50 p-6 rounded-[2rem] border border-red-100 uppercase text-left max-w-sm shadow-sm">{error}</div>}
+                                            {error && <div className="mt-8 text-red-600 text-[10px] font-black bg-red-50 p-6 rounded-md border border-red-100 uppercase text-left max-w-sm shadow-sm">{error}</div>}
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center py-24"><Icon name="loader" size={68} className="text-indigo-600 mb-8 animate-spin" /><h2 className="text-xl font-bold tracking-tight text-slate-800 uppercase italic">Procesando...</h2></div>
@@ -490,24 +487,24 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                         {image ? <img src={image} className="w-full h-full object-contain p-4 shadow-inner" /> : (
                                             <div className="flex flex-col items-center opacity-20"><Icon name={inputMode === 'audio' ? 'mic' : 'type'} size={80} /><p className="mt-6 font-black uppercase tracking-[0.3em] text-xs">Modo {inputMode}</p></div>
                                         )}
-                                        <button onClick={() => {setStep('upload'); setTextInput('');}} className="absolute bottom-4 left-4 bg-white/95 px-6 py-3 text-[10px] font-black text-red-500 rounded-[1.2rem] shadow-2xl border border-red-50 uppercase tracking-widest active:scale-90 transition-all">DESCARTAR</button>
+                                        <button onClick={() => {setStep('upload'); setTextInput('');}} className="absolute bottom-4 left-4 bg-white/95 px-6 py-3 text-[10px] font-black text-red-500 rounded-md shadow-2xl border border-red-50 uppercase tracking-widest active:scale-90 transition-all">DESCARTAR</button>
                                     </div>
                                     
                                     <div className="w-full md:w-3/5 flex flex-col bg-slate-50/40">
                                         <div className="p-6 bg-indigo-900 text-white grid grid-cols-2 gap-4 shadow-2xl z-10">
                                             <div>
                                                 <label className="text-[9px] font-black text-indigo-300 uppercase block px-1 mb-1 tracking-widest">Comentario / Comercio</label>
-                                                <input value={extractedData.comentario || ""} onChange={e => setExtractedData({...extractedData, comentario: e.target.value})} className="bg-indigo-800 w-full rounded-xl p-3 text-xs font-bold border-none outline-none focus:ring-2 focus:ring-indigo-400" />
+                                                <input value={extractedData.comentario || ""} onChange={e => setExtractedData({...extractedData, comentario: e.target.value})} className="bg-indigo-800 w-full rounded-md p-3 text-xs font-bold border-none outline-none focus:ring-2 focus:ring-indigo-400" />
                                             </div>
                                             <div>
                                                 <label className="text-[9px] font-black text-indigo-300 uppercase block px-1 mb-1 tracking-widest">Fecha</label>
-                                                <input value={extractedData.fecha || ""} onChange={e => setExtractedData({...extractedData, fecha: e.target.value})} className="bg-indigo-800 w-full rounded-xl p-3 text-xs font-mono border-none outline-none focus:ring-2 focus:ring-indigo-400" />
+                                                <input value={extractedData.fecha || ""} onChange={e => setExtractedData({...extractedData, fecha: e.target.value})} className="bg-indigo-800 w-full rounded-md p-3 text-xs font-mono border-none outline-none focus:ring-2 focus:ring-indigo-400" />
                                             </div>
                                         </div>
                                         
                                         <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scroll">
                                             {extractedData?.items?.map((item, idx) => (
-                                                <div key={idx} className="bg-white p-5 rounded-[1.8rem] border border-slate-200 shadow-sm hover:border-indigo-400 transition-all hover:shadow-xl group">
+                                                <div key={idx} className="bg-white p-5 rounded-md border border-slate-200 shadow-sm hover:border-indigo-400 transition-all hover:shadow-xl group">
                                                     <div className="flex justify-between items-start gap-4 mb-3">
                                                         <textarea rows="1" className="flex-1 font-bold text-[13px] bg-transparent border-none p-0 focus:ring-0 resize-none text-slate-800 outline-none" value={item.descripcion || ""} onChange={e => {
                                                             const newItems = [...extractedData.items];
@@ -523,7 +520,7 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <select className={`text-[9px] px-2 py-1.5 rounded-xl font-black border-none uppercase tracking-tighter outline-none w-1/3 ${item.tipo === 'Ingreso' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`} value={item.tipo || "Egreso"} onChange={e => {
+                                                        <select className={`text-[9px] px-2 py-1.5 rounded-md font-black border-none uppercase tracking-tighter outline-none w-1/3 ${item.tipo === 'Ingreso' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`} value={item.tipo || "Egreso"} onChange={e => {
                                                             const newItems = [...extractedData.items];
                                                             newItems[idx].tipo = e.target.value;
                                                             setExtractedData({...extractedData, items: newItems});
@@ -531,12 +528,12 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                                             <option value="Egreso">Egreso</option>
                                                             <option value="Ingreso">Ingreso</option>
                                                         </select>
-                                                        <input className="text-[9px] bg-slate-100 px-2 py-1.5 rounded-xl font-black text-slate-500 border-none uppercase tracking-tighter outline-none w-1/3" value={item.categoria || ""} onChange={e => {
+                                                        <input className="text-[9px] bg-slate-100 px-2 py-1.5 rounded-md font-black text-slate-500 border-none uppercase tracking-tighter outline-none w-1/3" value={item.categoria || ""} onChange={e => {
                                                             const newItems = [...extractedData.items];
                                                             newItems[idx].categoria = e.target.value;
                                                             setExtractedData({...extractedData, items: newItems});
                                                         }} />
-                                                        <input className="text-[9px] bg-indigo-50 px-2 py-1.5 rounded-xl font-black text-indigo-600 border-none uppercase tracking-tighter outline-none w-1/3" value={item.cuenta || ""} onChange={e => {
+                                                        <input className="text-[9px] bg-indigo-50 px-2 py-1.5 rounded-md font-black text-indigo-600 border-none uppercase tracking-tighter outline-none w-1/3" value={item.cuenta || ""} onChange={e => {
                                                             const newItems = [...extractedData.items];
                                                             newItems[idx].cuenta = e.target.value;
                                                             setExtractedData({...extractedData, items: newItems});
@@ -546,19 +543,19 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                                 </div>
                                             ))}
                                             
-                                            <button onClick={() => setExtractedData({...extractedData, items: [...(extractedData.items || []), {descripcion: "Nuevo Ítem", monto: 0, categoria: "Salida", cuenta: "Efectivo", tipo: "Egreso"}]})} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:border-indigo-300 hover:text-indigo-400 transition-all">+ AÑADIR LÍNEA</button>
+                                            <button onClick={() => setExtractedData({...extractedData, items: [...(extractedData.items || []), {descripcion: "Nuevo Ítem", monto: 0, categoria: "Salida", cuenta: "Efectivo", tipo: "Egreso"}]})} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-md text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:border-indigo-300 hover:text-indigo-400 transition-all">+ AÑADIR LÍNEA</button>
                                             
-                                            <div className="mt-8 p-5 bg-indigo-50 border border-indigo-100 rounded-3xl">
+                                            <div className="mt-8 p-5 bg-indigo-50 border border-indigo-100 rounded-md">
                                                 <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 flex items-center gap-2"><Icon name="sparkles" size={14}/> Corrección con IA</p>
                                                 <div className="flex flex-col md:flex-row gap-3">
-                                                    <textarea value={correctionText} onChange={e => setCorrectionText(e.target.value)} placeholder="Ej: Cámbialo a Falabella..." className="flex-1 bg-white border border-indigo-100 rounded-2xl p-3 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 resize-none h-12" />
+                                                    <textarea value={correctionText} onChange={e => setCorrectionText(e.target.value)} placeholder="Ej: Cámbialo a Falabella..." className="flex-1 bg-white border border-indigo-100 rounded-md p-3 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400 resize-none h-12" />
                                                     <div className="flex gap-2">
                                                         {!isRecordingCorrection ? (
-                                                            <button onClick={() => handleStartRecording(true)} className="bg-white border border-red-200 hover:bg-red-50 text-red-500 p-3 rounded-2xl transition-all shadow-sm flex-shrink-0 active:scale-95"><Icon name="mic" size={20} /></button>
+                                                            <button onClick={() => handleStartRecording(true)} className="bg-white border border-red-200 hover:bg-red-50 text-red-500 p-3 rounded-md transition-all shadow-sm flex-shrink-0 active:scale-95"><Icon name="mic" size={20} /></button>
                                                         ) : (
-                                                            <button onClick={() => handleStopRecording(true)} className="bg-red-500 text-white p-3 rounded-2xl transition-all shadow-md animate-pulse flex-shrink-0 active:scale-95"><Icon name="stop" size={20} /></button>
+                                                            <button onClick={() => handleStopRecording(true)} className="bg-red-500 text-white p-3 rounded-md transition-all shadow-md animate-pulse flex-shrink-0 active:scale-95"><Icon name="stop" size={20} /></button>
                                                         )}
-                                                        <button onClick={() => applyCorrection(correctionText, 'text')} disabled={!correctionText.trim() || isCorrecting} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-500 text-white px-5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center gap-2">
+                                                        <button onClick={() => applyCorrection(correctionText, 'text')} disabled={!correctionText.trim() || isCorrecting} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-500 text-white px-5 rounded-md font-black text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95 flex items-center gap-2">
                                                             {isCorrecting ? <Icon name="loader" size={16} /> : "Aplicar"}
                                                         </button>
                                                     </div>
@@ -568,7 +565,7 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                         
                                         <div className="p-8 bg-white border-t flex justify-between items-center shadow-[0_-10px_40px_rgba(0,0,0,0.08)] relative z-20">
                                             <div className="text-3xl font-black text-slate-900 tracking-tighter leading-none">${extractedData?.items?.reduce((acc, item) => acc + (item.monto || 0), 0).toLocaleString()}</div>
-                                            <button onClick={handleRegister} disabled={isSubmitting || !extractedData?.items?.length} className="bg-slate-900 text-white px-10 py-5 rounded-[1.5rem] font-black flex items-center gap-3 shadow-2xl disabled:bg-slate-200 disabled:shadow-none active:scale-95 hover:bg-black transition-all uppercase tracking-widest text-[11px]">
+                                            <button onClick={handleRegister} disabled={isSubmitting || !extractedData?.items?.length} className="bg-slate-900 text-white px-10 py-5 rounded-md font-black flex items-center gap-3 shadow-2xl disabled:bg-slate-200 disabled:shadow-none active:scale-95 hover:bg-black transition-all uppercase tracking-widest text-[11px]">
                                                 {isSubmitting ? <Icon name="loader" /> : <><Icon name="send" /> ENVIAR A SHEETS</>}
                                             </button>
                                         </div>
@@ -578,11 +575,11 @@ JSON actual: ${JSON.stringify(extractedData)}`;
 
                             {step === 'result' && (
                                 <div className="p-16 text-center animate-in zoom-in duration-500">
-                                    <div className={`w-32 h-32 mx-auto rounded-[2.8rem] flex items-center justify-center mb-10 shadow-inner ${registrationStatus === 'success' ? 'bg-green-100 text-green-600 shadow-green-100' : 'bg-amber-100 text-amber-600 shadow-amber-100'}`}>
+                                    <div className={`w-32 h-32 mx-auto rounded-lg flex items-center justify-center mb-10 shadow-inner ${registrationStatus === 'success' ? 'bg-green-100 text-green-600 shadow-green-100' : 'bg-amber-100 text-amber-600 shadow-amber-100'}`}>
                                         <Icon name={registrationStatus === 'success' ? 'check' : 'alert'} size={64} />
                                     </div>
                                     <h2 className="text-3xl font-black mb-14 tracking-tighter text-slate-800 uppercase italic">{registrationStatus === 'success' ? "¡Registro Guardado!" : "Error en el Script"}</h2>
-                                    <button onClick={() => {setStep('upload'); setTextInput('');}} className="bg-indigo-600 text-white px-16 py-6 rounded-[2.2rem] font-black tracking-widest shadow-2xl active:scale-95 transition-all uppercase text-[11px] hover:bg-indigo-700">SIGUIENTE GASTO</button>
+                                    <button onClick={() => {setStep('upload'); setTextInput('');}} className="bg-indigo-600 text-white px-16 py-6 rounded-md font-black tracking-widest shadow-2xl active:scale-95 transition-all uppercase text-[11px] hover:bg-indigo-700">SIGUIENTE GASTO</button>
                                 </div>
                             )}
                         </div>
