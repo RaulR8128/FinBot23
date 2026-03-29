@@ -208,11 +208,17 @@ Sin markdown ni explicaciones, solo el JSON.`;
                     
                     return JSON.parse(jsonMatch[0]);
                 } catch (err) {
-                    // Solo reintentar si es 429 (Límite de velocidad) o 500/503 (Error de servidor)
-                    if (retries < 1 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
-                        await new Promise(res => setTimeout(res, 2000));
+                    // Reintentamos hasta 2 veces con una pausa de 5 segundos si topamos con el límite de cuota (429) o fallos del servidor.
+                    if (retries < 2 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
+                        await new Promise(res => setTimeout(res, 5000));
                         return callGeminiInitial(inputData, type, retries + 1);
                     }
+                    
+                    // Si después de los reintentos sigue el error 429, mostramos un mensaje más limpio.
+                    if (err.message.includes('429')) {
+                        throw new Error("⚠️ Has superado el límite de velocidad gratuito de Google (20 por min). Por favor, espera unos 15 segundos y vuelve a intentarlo.");
+                    }
+                    
                     throw err;
                 }
             };
@@ -256,9 +262,12 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                     
                     return JSON.parse(jsonMatch[0]);
                 } catch (err) {
-                    if (retries < 1 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
-                        await new Promise(res => setTimeout(res, 2000));
+                    if (retries < 2 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
+                        await new Promise(res => setTimeout(res, 5000));
                         return callGeminiCorrection(inputData, type, retries + 1);
+                    }
+                    if (err.message.includes('429')) {
+                        throw new Error("⚠️ Has superado el límite de velocidad gratuito de Google (20 por min). Por favor, espera unos 15 segundos y vuelve a intentarlo.");
                     }
                     throw err;
                 }
@@ -384,7 +393,7 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                                 <h1 className="text-2xl font-black text-indigo-900 tracking-tighter uppercase italic">
                                     App <span className="text-indigo-500 font-light underline">Finanzas AI</span>
                                 </h1>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v6.4</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v6.5</p>
                             </div>
                             <button onClick={() => setShowSettings(!showSettings)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 active:scale-95 transition-all relative">
                                 {!isConfigured && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>}
