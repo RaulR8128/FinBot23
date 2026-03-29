@@ -194,14 +194,22 @@ Sin markdown ni explicaciones, solo el JSON.`;
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts }] })
                     });
-                    if (!response.ok) throw new Error("Error en el servidor de Google (Probable sobrecarga de datos o mantenimiento).");
+                    
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(`[HTTP ${response.status}] ${errData.error?.message || 'Sobrecarga de datos o mantenimiento.'}`);
+                    }
+                    
                     const data = await response.json();
-                    if (!data.candidates) throw new Error("La IA no generó una respuesta.");
+                    if (!data.candidates) throw new Error("La IA no generó una respuesta válida.");
+                    
                     const jsonMatch = data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) throw new Error("Formato de datos inválido devuelto por la IA.");
+                    
                     return JSON.parse(jsonMatch[0]);
                 } catch (err) {
-                    if (retries < 1) {
+                    // Solo reintentar si es 429 (Límite de velocidad) o 500/503 (Error de servidor)
+                    if (retries < 1 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
                         await new Promise(res => setTimeout(res, 2000));
                         return callGeminiInitial(inputData, type, retries + 1);
                     }
@@ -236,13 +244,19 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts }] })
                     });
-                    if (!response.ok) throw new Error("Error procesando la corrección.");
+                    
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(`[HTTP ${response.status}] ${errData.error?.message || 'Error procesando la corrección.'}`);
+                    }
+                    
                     const data = await response.json();
                     const jsonMatch = data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/);
                     if (!jsonMatch) throw new Error("El modelo no devolvió un JSON válido en la corrección.");
+                    
                     return JSON.parse(jsonMatch[0]);
                 } catch (err) {
-                    if (retries < 1) {
+                    if (retries < 1 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
                         await new Promise(res => setTimeout(res, 2000));
                         return callGeminiCorrection(inputData, type, retries + 1);
                     }
@@ -258,7 +272,7 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                     if (!parsedData.items) parsedData.items = [];
                     setExtractedData(parsedData);
                     setStep('confirm');
-                } catch (err) { setError("Fallo en el análisis: " + err.message); } 
+                } catch (err) { setError(err.message); } // Mostramos el mensaje exacto de error
                 finally { setLoading(false); }
             };
 
@@ -273,23 +287,22 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                 finally { setIsCorrecting(false); }
             };
 
-            // --- COMPRESOR DE IMÁGENES ULTRA OPTIMIZADO (Evita pantalla blanca) ---
+            // --- COMPRESOR DE IMÁGENES ULTRA OPTIMIZADO ---
             const handleFileChange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                setLoading(true); // Mostrar pantalla de carga inmediatamente
+                setLoading(true);
                 setError(null);
 
-                // Usamos URL.createObjectURL para no saturar la memoria RAM del celular
                 const objectUrl = URL.createObjectURL(file);
                 const img = new Image();
                 img.src = objectUrl;
 
                 img.onload = () => {
-                    URL.revokeObjectURL(objectUrl); // Liberamos memoria inmediatamente
+                    URL.revokeObjectURL(objectUrl);
                     const canvas = document.createElement('canvas');
-                    const MAX_SIZE = 1000; // Límite de tamaño
+                    const MAX_SIZE = 1000;
                     let width = img.width;
                     let height = img.height;
 
@@ -310,16 +323,16 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Comprime la imagen a JPEG ligero
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
                     
-                    // Enviar la imagen comprimida a Google
                     processInput(compressedDataUrl, 'image');
+                    e.target.value = null; // Reseteamos el input para que permita resubir la misma foto si hubo error
                 };
                 img.onerror = () => {
                     URL.revokeObjectURL(objectUrl);
                     setError("Error procesando la imagen en tu dispositivo.");
                     setLoading(false);
+                    e.target.value = null; // Reseteamos el input
                 };
             };
 
@@ -337,13 +350,13 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                     }
                     const rows = extractedData.items.map(item => [
                         extractedData.fecha || "", 
-                        item.tipo || "Egreso", // Tipo: Ingreso/Egreso
+                        item.tipo || "Egreso", 
                         item.categoria || "", 
                         item.cuenta || "", 
                         item.descripcion || "", 
-                        item.monto || 0, // Positivo o Negativo
+                        item.monto || 0, 
                         "CLP", 
-                        extractedData.comentario || "" // Comentario o Comercio
+                        extractedData.comentario || "" 
                     ].join(';'));
                     
                     const finalUrl = `${webhookUrl}?data=${encodeURIComponent(rows.join('|'))}`;
@@ -364,7 +377,7 @@ Devuelve EXCLUSIVAMENTE el JSON modificado en su totalidad, conservando la estru
                                 <h1 className="text-2xl font-black text-indigo-900 tracking-tighter uppercase italic">
                                     App <span className="text-indigo-500 font-light underline">Finanzas AI</span>
                                 </h1>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v6.2</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v6.3</p>
                             </div>
                             <button onClick={() => setShowSettings(!showSettings)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 active:scale-95 transition-all relative">
                                 {!isConfigured && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>}
