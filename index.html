@@ -77,15 +77,19 @@
             
             const [localApiKey, setLocalApiKey] = useState(localStorage.getItem('raul_gemini_key') || "");
             const [webhookUrl, setWebhookUrl] = useState(localStorage.getItem('raul_webhook_url') || "");
-            // IMPORTANTE: Cambio por defecto al modelo 1.5-flash para evitar bloqueos
-            const [modelId, setModelId] = useState(localStorage.getItem('raul_model_id') || "gemini-1.5-flash"); 
+            
+            // NUEVO: Modelo por defecto apunta al estable más reciente en lugar del "1.5"
+            const [modelId, setModelId] = useState(() => {
+                return localStorage.getItem('raul_model_id') || "gemini-flash-latest";
+            });
+
             const [showSettings, setShowSettings] = useState(false);
             const [availableModels, setAvailableModels] = useState([]);
             const [fetchingModels, setFetchingModels] = useState(false);
 
             const isConfigured = localApiKey.trim() !== "" && webhookUrl.trim() !== "";
 
-            // ESQUEMA JSON: Define la estructura exacta para no tener que explicarla en texto
+            // ESQUEMA JSON: Define la estructura exacta para no gastar tokens
             const jsonSchema = {
                 type: "OBJECT",
                 properties: {
@@ -207,7 +211,6 @@
                     const data = await response.json();
                     if (!data.candidates) throw new Error("Sin respuesta de la IA.");
                     
-                    // Como forzamos application/json, la respuesta es texto JSON limpio
                     return JSON.parse(data.candidates[0].content.parts[0].text);
                 } catch (err) {
                     if (retries < 2 && (err.message.includes('429') || err.message.includes('500') || err.message.includes('503'))) {
@@ -215,7 +218,7 @@
                         return callGeminiInitial(inputData, type, retries + 1);
                     }
                     if (err.message.includes('429')) {
-                        throw new Error("⚠️ Límite de Google alcanzado. Espera unos segundos e intenta de nuevo.");
+                        throw new Error("⚠️ Límite diario alcanzado para esta API Key o Modelo. Cambia de modelo o genera una nueva clave en Google AI Studio.");
                     }
                     throw err;
                 }
@@ -258,7 +261,7 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                         return callGeminiCorrection(inputData, type, retries + 1);
                     }
                     if (err.message.includes('429')) {
-                        throw new Error("⚠️ Límite de Google alcanzado. Espera unos segundos e intenta de nuevo.");
+                        throw new Error("⚠️ Límite diario alcanzado para esta API Key o Modelo. Cambia de modelo o genera una nueva clave en Google AI Studio.");
                     }
                     throw err;
                 }
@@ -383,7 +386,7 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                 <h1 className="text-2xl font-black text-indigo-900 tracking-tighter uppercase italic">
                                     App <span className="text-indigo-500 font-light underline">Finanzas AI</span>
                                 </h1>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v7.0 (Ultra Ligera)</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración Raúl v7.2 (Modelos Dinámicos)</p>
                             </div>
                             <button onClick={() => setShowSettings(!showSettings)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 active:scale-95 transition-all relative">
                                 {!isConfigured && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>}
@@ -409,7 +412,7 @@ JSON actual: ${JSON.stringify(extractedData)}`;
                                         <div className="flex gap-2">
                                             <select value={modelId} onChange={(e) => {setModelId(e.target.value); localStorage.setItem('raul_model_id', e.target.value);}} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
                                                 {availableModels.length > 0 ? availableModels.map(m => <option key={m} value={m}>{m.toUpperCase()}</option>) : (
-                                                    <><option value="gemini-2.5-flash">Gemini 2.5 Flash</option><option value="gemini-1.5-flash">Gemini 1.5 Flash</option></>
+                                                    <><option value="gemini-flash-latest">GEMINI-FLASH-LATEST</option><option value="gemini-2.5-flash">GEMINI-2.5-FLASH</option></>
                                                 )}
                                             </select>
                                             <button onClick={fetchModels} disabled={fetchingModels || !localApiKey} className={`px-4 ${!localApiKey ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'} border border-indigo-100 rounded-xl text-xs font-bold active:scale-95 transition-all`}>
